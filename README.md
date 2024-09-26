@@ -1,6 +1,6 @@
 <h1>ExpNo 5 : Implement Minimax Search Algorithm for a Simple TIC-TAC-TOE game</h1> 
-<h3>Name:           </h3>
-<h3>Register Number/Staff Id:          </h3>
+<h3>Name: SETHUKKARASI C          </h3>
+<h3>Register Number: 212223230201         </h3>
 <H3>Aim:</H3>
 <p>
     Implement Minimax Search Algorithm for a Simple TIC-TAC-TOE game
@@ -56,13 +56,14 @@ Let's walk through the algorithm's execution with the full move tree, and show w
 <li>State 5 pushes a score of -10 onto state 3's score list, while the same happens for state 7 which pushes a score of -10 onto state 4's score list.</li>
 <li>State 6 and 8 generate the only available moves, which are end states, and so both of them add the score of +10 to the move lists of states 3 and 4.</li>
 <li>Because it is O's turn in both state 3 and 4, O will seek to find the minimum score, and given the choice between -10 and +10, both states 3 and 4 will yield -10.</li>
-<li>>Finally the score list for states 2, 3, and 4 are populated with +10, -10 and -10 respectively, and state 1 seeking to maximize the score will chose the winning move with score +10, state 2.</li
+<li>>Finally the score list for states 2, 3, and 4 are populated with +10, -10 and -10 respectively, and state 1 seeking to maximize the score will chose the winning move with score +10, state 2.</li>
 </ul>
 ##A Coded Version of Minimax Hopefully by now you have a rough sense of how th e minimax algorithm determines the best move to play. Let's examine my implementation of the algorithm to solidify the understanding:
 
 Here is the function for scoring the game:
 
 # @player is the turn taking player
+```
 def score(game)
     if game.win?(@player)
         return 10
@@ -72,10 +73,12 @@ def score(game)
         return 0
     end
 end
+```
 Simple enough, return +10 if the current player wins the game, -10 if the other player wins and 0 for a draw. You will note that who the player is doesn't matter. X or O is irrelevant, only who's turn it happens to be.
 
 And now the actual minimax algorithm; note that in this implementation a choice or move is simply a row / column address on the board, for example [0,2] is the top right square on a 3x3 board.
 
+```
 def minimax(game)
     return score(game) if game.over?
     scores = [] # an array of scores
@@ -101,6 +104,164 @@ def minimax(game)
         return scores[min_score_index]
     end
 end
+```
+
+<hr>
+<h2>Program:</h2>
+<hr>
+
+```
+import time
+
+class Game:
+    def __init__(self):
+        self.initialize_game()
+
+    def initialize_game(self):
+        self.current_state = [['.','.','.'],
+                              ['.','.','.'],
+                              ['.','.','.']]
+
+        # Player X always plays first
+        self.player_turn = 'X'
+
+    def draw_board(self):
+        for i in range(3):
+            for j in range(3):
+                print('{}|'.format(self.current_state[i][j]), end=" ")
+            print()
+        print()
+
+    def is_valid(self, px, py):
+        return 0 <= px < 3 and 0 <= py < 3 and self.current_state[px][py] == '.'
+
+    def is_end(self):
+        # Vertical win
+        for i in range(3):
+            if self.current_state[0][i] != '.' and self.current_state[0][i] == self.current_state[1][i] == self.current_state[2][i]:
+                return self.current_state[0][i]
+
+        # Horizontal win
+        for i in range(3):
+            if self.current_state[i] == ['X', 'X', 'X']:
+                return 'X'
+            elif self.current_state[i] == ['O', 'O', 'O']:
+                return 'O'
+
+        # Main diagonal win
+        if self.current_state[0][0] != '.' and self.current_state[0][0] == self.current_state[1][1] == self.current_state[2][2]:
+            return self.current_state[0][0]
+
+        # Second diagonal win
+        if self.current_state[0][2] != '.' and self.current_state[0][2] == self.current_state[1][1] == self.current_state[2][0]:
+            return self.current_state[0][2]
+
+        # Check for empty cells
+        for row in self.current_state:
+            if '.' in row:
+                return None
+
+        # It's a tie!
+        return '.'
+
+    def max(self):
+        maxv = -2
+        px = py = None
+        result = self.is_end()
+
+        if result == 'X':
+            return (-1, 0, 0)
+        elif result == 'O':
+            return (1, 0, 0)
+        elif result == '.':
+            return (0, 0, 0)
+
+        for i in range(3):
+            for j in range(3):
+                if self.current_state[i][j] == '.':
+                    self.current_state[i][j] = 'O'
+                    (m, min_i, min_j) = self.min()
+                    if m > maxv:
+                        maxv = m
+                        px = i
+                        py = j
+                    self.current_state[i][j] = '.'
+        return (maxv, px, py)
+
+    def min(self):
+        minv = 2
+        qx = qy = None
+        result = self.is_end()
+
+        if result == 'X':
+            return (-1, 0, 0)
+        elif result == 'O':
+            return (1, 0, 0)
+        elif result == '.':
+            return (0, 0, 0)
+
+        for i in range(3):
+            for j in range(3):
+                if self.current_state[i][j] == '.':
+                    self.current_state[i][j] = 'X'
+                    (m, max_i, max_j) = self.max()
+                    if m < minv:
+                        minv = m
+                        qx = i
+                        qy = j
+                    self.current_state[i][j] = '.'
+        return (minv, qx, qy)
+
+    def play(self):
+        while True:
+            self.draw_board()
+            self.result = self.is_end()
+
+            if self.result is not None:
+                if self.result == 'X':
+                    print('The winner is X!')
+                elif self.result == 'O':
+                    print('The winner is O!')
+                elif self.result == '.':
+                    print("It's a tie!")
+
+                self.initialize_game()
+                return
+
+            if self.player_turn == 'X':
+                while True:
+                    start = time.time()
+                    (m, qx, qy) = self.min()
+                    end = time.time()
+                    print('Evaluation time: {}s'.format(round(end - start, 7)))
+                    print('Recommended move: X = {}, Y = {}'.format(qx, qy))
+
+                    try:
+                        px = int(input('Insert the X coordinate: '))
+                        py = int(input('Insert the Y coordinate: '))
+                    except ValueError:
+                        print("Invalid input. Please enter numbers.")
+                        continue
+
+                    if self.is_valid(px, py):
+                        self.current_state[px][py] = 'X'
+                        self.player_turn = 'O'
+                        break
+                    else:
+                        print('The move is not valid! Try again.')
+
+            else:
+                (m, px, py) = self.max()
+                self.current_state[px][py] = 'O'
+                self.player_turn = 'X'
+
+def main():
+    g = Game()
+    g.play()
+
+if __name__ == "__main__":
+    main()
+```
 
 <hr>
 <h2>Sample Input and Output</h2>
